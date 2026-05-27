@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "XDL 导航采集助手",
+  "version": "0.1.0",
+  "description": "检测当前页面标题与链接，快速添加网站和分类到 XDL Homepage。",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "采集到 XDL 导航"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["activeTab", "tabs", "storage"],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

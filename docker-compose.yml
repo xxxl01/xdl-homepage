@@ -1,0 +1,9 @@
+services:
+  xdl-homepage:
+    image: ${IMAGE:-ghcr.io/your-github-owner/xdl-homepage:latest}
+    container_name: xdl-homepage
+    restart: unless-stopped
+    ports:
+      - "8100:8100"
+    env_file:
+      - ./backend/.env

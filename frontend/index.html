@@ -1,0 +1,950 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XDL Homepage</title>
+  <style>
+    :root {
+      --bg: #f4f4f5;
+      --panel: #ffffff;
+      --text: #111111;
+      --muted: #6b7280;
+      --line: #d8d8dc;
+      --line-soft: #ececef;
+      --side: #e7e7ea;
+      --side-soft: #f1f1f3;
+      --hover: #eeeeef;
+      --shadow: 0 10px 28px rgba(0, 0, 0, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background: var(--bg);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+      line-height: 1.35;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 248px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 22px 16px;
+      color: #18181b;
+      background: var(--side);
+      border-right: 1px solid #ccccd1;
+      overflow-y: auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 24px;
+      padding: 0 6px;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      color: #ffffff;
+      background: #111111;
+      border-radius: 9px;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .brand-subtitle {
+      margin-top: 1px;
+      color: #6b7280;
+      font-size: 12px;
+    }
+
+    .side-label {
+      margin: 0 6px 9px;
+      color: #71717a;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .category-list {
+      display: grid;
+      gap: 5px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .category-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 9px 10px;
+      color: #3f3f46;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      font-size: 13px;
+      transition: 150ms ease;
+    }
+
+    .category-link:hover,
+    .category-link.active {
+      color: #111111;
+      background: var(--side-soft);
+      border-color: #c8c8ce;
+    }
+
+    .category-count {
+      min-width: 22px;
+      padding: 1px 6px;
+      color: #ffffff;
+      background: #18181b;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .content {
+      min-width: 0;
+      padding: 26px clamp(18px, 3vw, 38px) 42px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 22px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow {
+      margin: 0 0 5px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(24px, 3vw, 34px);
+      line-height: 1.05;
+      letter-spacing: -0.055em;
+    }
+
+    .summary {
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .top-actions,
+    .section-actions,
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .top-actions {
+      justify-content: flex-end;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      height: 30px;
+      padding: 0 10px;
+      color: #18181b;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      transition: 150ms ease;
+    }
+
+    .btn:hover {
+      background: var(--hover);
+      border-color: #a1a1aa;
+    }
+
+    .btn.primary {
+      color: #ffffff;
+      background: #111111;
+      border-color: #111111;
+    }
+
+    .btn.primary:hover {
+      background: #333333;
+    }
+
+    .btn.danger {
+      color: #4b1111;
+    }
+
+    .btn svg {
+      width: 14px;
+      height: 14px;
+      stroke-width: 2.2;
+    }
+
+    .section {
+      scroll-margin-top: 18px;
+      margin-top: 26px;
+    }
+
+    .section:first-of-type {
+      margin-top: 0;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .section-meta {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .section-desc {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 8px;
+    }
+
+    .site-card {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      min-height: 48px;
+      padding: 8px 9px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+    }
+
+    .site-link {
+      display: grid;
+      grid-column: 1 / 3;
+      grid-template-columns: 28px minmax(0, 1fr);
+      gap: 8px;
+      align-items: center;
+    }
+
+    .site-card:hover {
+      transform: translateY(-2px);
+      background: #fbfbfb;
+      border-color: #9f9fa4;
+    }
+
+    .icon {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      color: #ffffff;
+      background: #f4f4f5;
+      border: 1px solid #e4e4e7;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .favicon {
+      width: 16px;
+      height: 16px;
+      object-fit: contain;
+    }
+
+    .card-body {
+      min-width: 0;
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0 0 2px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .card-title span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .external {
+      color: #9ca3af;
+      line-height: 0;
+    }
+
+    .external svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .card-desc {
+      display: none;
+      margin: 0 0 5px;
+      overflow: hidden;
+      color: #5f6368;
+      font-size: 11px;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .card-url {
+      overflow: hidden;
+      color: #8a8f98;
+      font-size: 10px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .card-actions {
+      grid-column: 3;
+      margin-top: 0;
+      flex-wrap: nowrap;
+    }
+
+    .card-actions .btn {
+      width: 24px;
+      height: 22px;
+      padding: 0;
+      font-size: 11px;
+      border-radius: 8px;
+    }
+
+    .card-actions .btn svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    .empty-section {
+      padding: 10px 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .state {
+      display: grid;
+      place-items: center;
+      min-height: 45vh;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .dialog {
+      width: min(520px, calc(100vw - 28px));
+      padding: 0;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22);
+    }
+
+    .dialog::backdrop {
+      background: rgba(17, 17, 17, 0.36);
+      backdrop-filter: blur(2px);
+    }
+
+    .dialog-form {
+      display: grid;
+      gap: 14px;
+      padding: 18px;
+    }
+
+    .dialog-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .dialog-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 850;
+      letter-spacing: -0.04em;
+    }
+
+    .dialog-subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .dialog-close {
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      color: #52525b;
+      background: #f4f4f5;
+      border: 1px solid #e4e4e7;
+      border-radius: 9px;
+      cursor: pointer;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .field {
+      display: grid;
+      gap: 5px;
+    }
+
+    .field label {
+      color: #3f3f46;
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .field input,
+    .field textarea,
+    .field select {
+      width: 100%;
+      min-height: 34px;
+      padding: 7px 9px;
+      color: #18181b;
+      background: #fafafa;
+      border: 1px solid #d4d4d8;
+      border-radius: 10px;
+      outline: none;
+      font: inherit;
+      font-size: 13px;
+      transition: 150ms ease;
+    }
+
+    .field textarea {
+      min-height: 70px;
+      resize: vertical;
+    }
+
+    .field input:focus,
+    .field textarea:focus,
+    .field select:focus {
+      background: #ffffff;
+      border-color: #18181b;
+      box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.08);
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding-top: 4px;
+    }
+
+    @media (max-width: 760px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+        height: auto;
+        padding: 16px;
+      }
+
+      .category-list {
+        grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .summary {
+        white-space: normal;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">XDL</div>
+        <div>
+          <p class="brand-title">Homepage</p>
+          <div class="brand-subtitle">简洁导航</div>
+        </div>
+      </div>
+      <p class="side-label">分类</p>
+      <ul id="categoryList" class="category-list"></ul>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Navigation</p>
+          <h1>网站导航</h1>
+        </div>
+        <div class="top-actions">
+          <button class="btn primary" type="button" data-action="create-category">
+            <i data-lucide="folder-plus"></i>
+            新增分类
+          </button>
+          <div id="summary" class="summary">加载中...</div>
+        </div>
+      </header>
+
+      <div id="app" class="state">正在加载导航数据</div>
+    </main>
+  </div>
+
+  <dialog id="editDialog" class="dialog"></dialog>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script>
+    const app = document.querySelector('#app');
+    const categoryList = document.querySelector('#categoryList');
+    const summary = document.querySelector('#summary');
+    const editDialog = document.querySelector('#editDialog');
+    let navigationData = [];
+
+    init();
+    document.addEventListener('click', handleActionClick);
+
+    async function init() {
+      try {
+        navigationData = await loadNavigation();
+        render(navigationData);
+        bindActiveCategory();
+        renderIcons();
+      } catch (error) {
+        console.error('导航数据加载失败：', error);
+        summary.textContent = '加载失败';
+        categoryList.innerHTML = '';
+        app.className = 'state';
+        app.textContent = '导航数据加载失败，请检查后端接口 /api/navigation';
+      }
+    }
+
+    async function loadNavigation() {
+      const response = await fetch('/api/navigation');
+      if (!response.ok) throw new Error('接口返回异常');
+      return await response.json();
+    }
+
+    function render(categories) {
+      const itemCount = categories.reduce((total, category) => total + getItems(category).length, 0);
+      summary.textContent = `${categories.length} 个分类 · ${itemCount} 个网站`;
+
+      categoryList.innerHTML = categories.map((category, index) => `
+        <li>
+          <a class="category-link ${index === 0 ? 'active' : ''}" href="#category-${category.id}">
+            <span>${escapeHtml(category.name)}</span>
+            <span class="category-count">${getItems(category).length}</span>
+          </a>
+        </li>
+      `).join('');
+
+      app.className = '';
+      app.innerHTML = categories.map((category) => `
+        <section id="category-${category.id}" class="section">
+          <div class="section-head">
+            <div class="section-meta">
+              <h2 class="section-title">${escapeHtml(category.name)}</h2>
+              ${category.description ? `<span class="section-desc">${escapeHtml(category.description)}</span>` : ''}
+            </div>
+            <div class="section-actions">
+              <button class="btn primary" type="button" data-action="create-item" data-category-id="${category.id}">${iconSvg('plus')}新增网站</button>
+              <button class="btn" type="button" data-action="edit-category" data-category-id="${category.id}">${iconSvg('pencil')}编辑分类</button>
+              <button class="btn danger" type="button" data-action="delete-category" data-category-id="${category.id}">${iconSvg('trash-2')}删除分类</button>
+            </div>
+          </div>
+          ${getItems(category).length ? `<div class="grid">${getItems(category).map(renderItem).join('')}</div>` : '<div class="empty-section">该分类下暂无网站</div>'}
+        </section>
+      `).join('') || '<div class="state">暂无导航数据</div>';
+    }
+
+    function renderItem(item) {
+      const host = getHost(item.url);
+      const favicon = getFaviconUrl(item.url);
+      const fallbackFavicon = getFallbackFaviconUrl(item.url);
+      return `
+        <article class="site-card">
+          <a class="site-link" href="${escapeAttr(item.url)}" target="_blank" rel="noopener noreferrer">
+            <div class="icon">
+              <img class="favicon" src="${escapeAttr(favicon)}" alt="" loading="lazy" data-fallback="${escapeAttr(fallbackFavicon)}" onerror="handleIconError(this)">
+            </div>
+            <div class="card-body">
+              <h3 class="card-title"><span>${escapeHtml(item.title)}</span><b class="external">${iconSvg('external-link')}</b></h3>
+              <p class="card-desc">${escapeHtml(item.description || '暂无描述')}</p>
+              <div class="card-url">${escapeHtml(host)}</div>
+            </div>
+          </a>
+          <div class="card-actions">
+            <button class="btn" type="button" data-action="edit-item" data-item-id="${item.id}" title="编辑网站" aria-label="编辑网站">${iconSvg('pencil')}</button>
+            <button class="btn danger" type="button" data-action="delete-item" data-item-id="${item.id}" title="删除网站" aria-label="删除网站">${iconSvg('trash-2')}</button>
+          </div>
+        </article>
+      `;
+    }
+
+    async function handleActionClick(event) {
+      const button = event.target.closest('[data-action]');
+      if (!button) return;
+
+      const action = button.dataset.action;
+      const categoryId = Number(button.dataset.categoryId);
+      const itemId = Number(button.dataset.itemId);
+
+      try {
+        if (action === 'create-category') await createCategory();
+        if (action === 'edit-category') await editCategory(categoryId);
+        if (action === 'delete-category') await deleteCategory(categoryId);
+        if (action === 'create-item') await createItem(categoryId);
+        if (action === 'edit-item') await editItem(itemId);
+        if (action === 'delete-item') await deleteItem(itemId);
+      } catch (error) {
+        console.error('操作失败：', error);
+        alert(`操作失败：${error.message}`);
+      }
+    }
+
+    async function createCategory() {
+      const payload = await openCategoryDialog({ name: '', description: '', sort_order: 0 }, '新增分类');
+      if (!payload) return;
+      await request('/api/categories', 'POST', payload);
+      await refresh();
+    }
+
+    async function editCategory(categoryId) {
+      const category = findCategory(categoryId);
+      if (!category) return;
+      const payload = await openCategoryDialog(category, '编辑分类');
+      if (!payload) return;
+      await request(`/api/categories/${categoryId}`, 'PATCH', payload);
+      await refresh();
+    }
+
+    async function deleteCategory(categoryId) {
+      const category = findCategory(categoryId);
+      if (!category || !confirm(`确认删除分类「${category.name}」及其全部网站？`)) return;
+      await request(`/api/categories/${categoryId}`, 'DELETE');
+      await refresh();
+    }
+
+    async function createItem(categoryId) {
+      const payload = await openItemDialog({ category_id: categoryId, title: '', url: '', description: '', icon: '', sort_order: 0 }, '新增网站');
+      if (!payload) return;
+      await request('/api/items', 'POST', payload);
+      await refresh();
+    }
+
+    async function editItem(itemId) {
+      const item = findItem(itemId);
+      if (!item) return;
+      const payload = await openItemDialog(item, '编辑网站');
+      if (!payload) return;
+      await request(`/api/items/${itemId}`, 'PATCH', payload);
+      await refresh();
+    }
+
+    async function deleteItem(itemId) {
+      const item = findItem(itemId);
+      if (!item || !confirm(`确认删除网站「${item.title}」？`)) return;
+      await request(`/api/items/${itemId}`, 'DELETE');
+      await refresh();
+    }
+
+    function openCategoryDialog(category, title) {
+      return openFormDialog({
+        title,
+        subtitle: '用于侧边栏分组和页面分区排序。',
+        submitText: '保存分类',
+        fields: [
+          { name: 'name', label: '分类名称', type: 'text', value: category.name || '', required: true, placeholder: '例如：常用工具' },
+          { name: 'description', label: '分类描述', type: 'textarea', value: category.description || '', placeholder: '可留空' },
+          { name: 'sort_order', label: '排序值', type: 'number', value: category.sort_order ?? 0, placeholder: '数字越小越靠前' },
+        ],
+        onSubmit: (data) => ({
+          name: data.name.trim(),
+          description: data.description.trim() || null,
+          sort_order: Number(data.sort_order) || 0,
+        }),
+      });
+    }
+
+    function openItemDialog(item, title) {
+      return openFormDialog({
+        title,
+        subtitle: '网站图标会自动从网址获取，图标文字仅作为备用。',
+        submitText: '保存网站',
+        fields: [
+          { name: 'title', label: '网站名称', type: 'text', value: item.title || '', required: true, placeholder: '例如：GitHub' },
+          { name: 'url', label: '网站地址', type: 'url', value: item.url || '', required: true, placeholder: 'https://example.com' },
+          { name: 'category_id', label: '所属分类', type: 'select', value: item.category_id || '', required: true, options: navigationData.map((category) => ({ value: category.id, label: category.name })) },
+          { name: 'description', label: '网站描述', type: 'textarea', value: item.description || '', placeholder: '可留空，当前不显示在卡片上' },
+          { name: 'icon', label: '备用图标文字', type: 'text', value: item.icon || '', placeholder: '可留空' },
+          { name: 'sort_order', label: '排序值', type: 'number', value: item.sort_order ?? 0, placeholder: '数字越小越靠前' },
+        ],
+        onSubmit: (data) => ({
+          category_id: Number(data.category_id),
+          title: data.title.trim(),
+          url: data.url.trim(),
+          description: data.description.trim() || null,
+          icon: data.icon.trim() || null,
+          sort_order: Number(data.sort_order) || 0,
+        }),
+      });
+    }
+
+    function openFormDialog(config) {
+      return new Promise((resolve) => {
+        editDialog.innerHTML = `
+          <form class="dialog-form" method="dialog">
+            <div class="dialog-head">
+              <div>
+                <h2 class="dialog-title">${escapeHtml(config.title)}</h2>
+                <p class="dialog-subtitle">${escapeHtml(config.subtitle || '')}</p>
+              </div>
+              <button class="dialog-close" value="cancel" type="button" aria-label="关闭">${iconSvg('x')}</button>
+            </div>
+            <div class="form-grid">
+              ${config.fields.map(renderField).join('')}
+            </div>
+            <div class="dialog-actions">
+              <button class="btn" value="cancel" type="button">${iconSvg('x')}取消</button>
+              <button class="btn primary" value="save" type="submit">${iconSvg('check')} ${escapeHtml(config.submitText || '保存')}</button>
+            </div>
+          </form>
+        `;
+
+        renderIcons();
+        const form = editDialog.querySelector('form');
+        const closeButtons = editDialog.querySelectorAll('[value="cancel"]');
+        let settled = false;
+
+        const finish = (value) => {
+          if (settled) return;
+          settled = true;
+          editDialog.close();
+          editDialog.innerHTML = '';
+          resolve(value);
+        };
+
+        closeButtons.forEach((button) => button.addEventListener('click', () => finish(null)));
+        editDialog.addEventListener('cancel', (event) => {
+          event.preventDefault();
+          finish(null);
+        }, { once: true });
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const data = Object.fromEntries(new FormData(form).entries());
+          finish(config.onSubmit(data));
+        });
+
+        editDialog.showModal();
+        const firstInput = editDialog.querySelector('input, textarea, select');
+        firstInput?.focus();
+      });
+    }
+
+    function renderField(field) {
+      const value = escapeAttr(field.value ?? '');
+      const required = field.required ? 'required' : '';
+      if (field.type === 'textarea') {
+        return `
+          <div class="field">
+            <label for="field-${field.name}">${escapeHtml(field.label)}</label>
+            <textarea id="field-${field.name}" name="${field.name}" placeholder="${escapeAttr(field.placeholder || '')}" ${required}>${escapeHtml(field.value || '')}</textarea>
+          </div>
+        `;
+      }
+      if (field.type === 'select') {
+        return `
+          <div class="field">
+            <label for="field-${field.name}">${escapeHtml(field.label)}</label>
+            <select id="field-${field.name}" name="${field.name}" ${required}>
+              ${field.options.map((option) => `<option value="${escapeAttr(option.value)}" ${String(option.value) === String(field.value) ? 'selected' : ''}>${escapeHtml(option.label)}</option>`).join('')}
+            </select>
+          </div>
+        `;
+      }
+      return `
+        <div class="field">
+          <label for="field-${field.name}">${escapeHtml(field.label)}</label>
+          <input id="field-${field.name}" name="${field.name}" type="${field.type}" value="${value}" placeholder="${escapeAttr(field.placeholder || '')}" ${required}>
+        </div>
+      `;
+    }
+
+    async function request(url, method, payload) {
+      const options = { method, headers: {} };
+      if (payload) {
+        options.headers['Content-Type'] = 'application/json';
+        options.body = JSON.stringify(payload);
+      }
+
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        const message = await readError(response);
+        throw new Error(message);
+      }
+    }
+
+    async function refresh() {
+      navigationData = await loadNavigation();
+      render(navigationData);
+      bindActiveCategory();
+      renderIcons();
+    }
+
+    async function readError(response) {
+      try {
+        const data = await response.json();
+        return data.detail || '接口返回异常';
+      } catch {
+        return '接口返回异常';
+      }
+    }
+
+    function getItems(category) {
+      return category.items || [];
+    }
+
+    function findCategory(categoryId) {
+      return navigationData.find((category) => category.id === categoryId);
+    }
+
+    function findItem(itemId) {
+      return navigationData.flatMap(getItems).find((item) => item.id === itemId);
+    }
+
+    function bindActiveCategory() {
+      const links = [...document.querySelectorAll('.category-link')];
+      links.forEach((link) => {
+        link.addEventListener('click', () => {
+          links.forEach((item) => item.classList.remove('active'));
+          link.classList.add('active');
+        });
+      });
+    }
+
+    function getHost(url) {
+      try {
+        return new URL(url).host;
+      } catch {
+        return url;
+      }
+    }
+
+    function getFaviconUrl(url) {
+      try {
+        const target = new URL(url);
+        return `${target.origin}/favicon.ico`;
+      } catch {
+        return '';
+      }
+    }
+
+    function getFallbackFaviconUrl(url) {
+      const host = getHost(url);
+      return host ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32` : '';
+    }
+
+    function handleIconError(image) {
+      if (!image.dataset.fallback || image.src === image.dataset.fallback) return;
+      image.src = image.dataset.fallback;
+      image.dataset.fallback = '';
+    }
+
+    function iconSvg(name) {
+      return `<i data-lucide="${name}"></i>`;
+    }
+
+    function renderIcons() {
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>'"]/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;',
+      }[char]));
+    }
+
+    function escapeAttr(value) {
+      return escapeHtml(value).replace(/`/g, '&#96;');
+    }
+  </script>
+</body>
+</html>

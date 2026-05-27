@@ -1,0 +1,13 @@
+.git
+.github
+**/__pycache__/
+**/*.py[cod]
+backend/.venv/
+backend/.env
+backend/*.log
+.env
+.env.*
+!.env.example
+Dockerfile
+docker-compose.yml
+README.md

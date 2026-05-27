@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>XDL 导航采集助手</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="header">
+        <div>
+          <p class="eyebrow">XDL Homepage</p>
+          <h1>快速添加</h1>
+        </div>
+        <button id="refreshBtn" type="button" class="icon-btn" title="重新检测当前页面">↻</button>
+      </header>
+
+      <section class="panel compact">
+        <label for="apiBase">后端地址</label>
+        <div class="inline">
+          <input id="apiBase" type="url" placeholder="http://127.0.0.1:8100" />
+          <button id="loadCategoriesBtn" type="button" class="secondary small">刷新</button>
+        </div>
+        <p class="hint">后端地址只需设置一次，会自动保存到浏览器本地。</p>
+      </section>
+
+      <section class="panel">
+        <div class="section-title">添加网站</div>
+
+        <label for="title">标题</label>
+        <input id="title" type="text" placeholder="自动检测当前页面标题" />
+
+        <label for="url">链接</label>
+        <input id="url" type="url" placeholder="自动检测当前页面链接" />
+
+        <label for="description">描述</label>
+        <textarea id="description" rows="2" placeholder="自动读取 description，可手动修改"></textarea>
+
+        <label for="categoryId">分类</label>
+        <select id="categoryId"></select>
+
+        <button id="addItemBtn" type="button" class="primary full">添加网站</button>
+      </section>
+
+      <section class="panel">
+        <div class="section-title">添加分类</div>
+
+        <label for="categoryName">分类名称</label>
+        <input id="categoryName" type="text" placeholder="例如：常用工具" />
+
+        <label for="categoryDescription">分类描述</label>
+        <input id="categoryDescription" type="text" placeholder="可留空" />
+
+        <button id="addCategoryBtn" type="button" class="secondary full">添加分类</button>
+      </section>
+
+      <p id="status" class="status">正在检测当前页面……</p>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
