@@ -1,9 +1,12 @@
 const API_BASE_KEY = "xdl_homepage_api_base";
+const ADMIN_PASSWORD_KEY = "xdl_homepage_admin_password";
 const DEFAULT_API_BASE = "http://127.0.0.1:8100";
 let saveApiBaseTimer = 0;
+let saveAdminPasswordTimer = 0;
 
 const elements = {
   apiBase: document.getElementById("apiBase"),
+  adminPassword: document.getElementById("adminPassword"),
   title: document.getElementById("title"),
   url: document.getElementById("url"),
   description: document.getElementById("description"),
@@ -30,6 +33,10 @@ async function saveApiBase() {
   await chrome.storage.local.set({ [API_BASE_KEY]: getApiBase() });
 }
 
+async function saveAdminPassword() {
+  await chrome.storage.local.set({ [ADMIN_PASSWORD_KEY]: elements.adminPassword.value });
+}
+
 function saveApiBaseSoon() {
   clearTimeout(saveApiBaseTimer);
   saveApiBaseTimer = setTimeout(async () => {
@@ -38,9 +45,18 @@ function saveApiBaseSoon() {
   }, 300);
 }
 
-async function initApiBase() {
-  const result = await chrome.storage.local.get(API_BASE_KEY);
+function saveAdminPasswordSoon() {
+  clearTimeout(saveAdminPasswordTimer);
+  saveAdminPasswordTimer = setTimeout(async () => {
+    await saveAdminPassword();
+    setStatus("管理密码已自动保存。", "success");
+  }, 300);
+}
+
+async function initSettings() {
+  const result = await chrome.storage.local.get([API_BASE_KEY, ADMIN_PASSWORD_KEY]);
   elements.apiBase.value = result[API_BASE_KEY] || DEFAULT_API_BASE;
+  elements.adminPassword.value = result[ADMIN_PASSWORD_KEY] || "";
 }
 
 async function getActiveTab() {
@@ -195,7 +211,13 @@ function validateItem(item) {
 
 async function request(path, options = {}) {
   await saveApiBase();
+  await saveAdminPassword();
   const init = { method: options.method || "GET", headers: {} };
+  if (!["GET", "HEAD", "OPTIONS"].includes(init.method.toUpperCase())) {
+    const password = elements.adminPassword.value.trim();
+    if (!password) throw new Error("请输入管理密码后再修改");
+    init.headers["X-Admin-Password"] = password;
+  }
 
   if (options.body) {
     init.headers["Content-Type"] = "application/json";
@@ -232,8 +254,9 @@ elements.addCategoryBtn.addEventListener("click", addCategory);
 elements.addItemBtn.addEventListener("click", addItem);
 elements.apiBase.addEventListener("input", saveApiBaseSoon);
 elements.apiBase.addEventListener("change", loadCategories);
+elements.adminPassword.addEventListener("input", saveAdminPasswordSoon);
 
 (async function init() {
-  await initApiBase();
+  await initSettings();
   await Promise.all([detectCurrentPage(), loadCategories()]);
 })();

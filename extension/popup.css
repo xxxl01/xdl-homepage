@@ -22,6 +22,20 @@ body {
   justify-content: space-between;
 }
 
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.10);
+  object-fit: cover;
+}
+
 .eyebrow {
   margin: 0 0 3px;
   color: #71717a;

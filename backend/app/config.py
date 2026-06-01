@@ -17,6 +17,7 @@ class Settings:
     db_name: str = os.getenv("DB_NAME", "xdl-homepage")
     db_user: str = os.getenv("DB_USER", "root")
     db_password: str = os.getenv("DB_PASSWORD", "")
+    admin_password: str = os.getenv("ADMIN_PASSWORD", "")
 
     @property
     def database_url(self) -> str:

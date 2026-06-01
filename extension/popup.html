@@ -4,14 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>XDL 导航采集助手</title>
+    <link rel="icon" type="image/png" href="icons/xdl-homepage-icon.png" />
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
     <main class="app">
       <header class="header">
-        <div>
-          <p class="eyebrow">XDL Homepage</p>
-          <h1>快速添加</h1>
+        <div class="brand">
+          <img class="brand-icon" src="icons/xdl-homepage-icon.png" alt="XDL Homepage" />
+          <div>
+            <p class="eyebrow">XDL Homepage</p>
+            <h1>快速添加</h1>
+          </div>
         </div>
         <button id="refreshBtn" type="button" class="icon-btn" title="重新检测当前页面">↻</button>
       </header>
@@ -23,6 +27,10 @@
           <button id="loadCategoriesBtn" type="button" class="secondary small">刷新</button>
         </div>
         <p class="hint">后端地址只需设置一次，会自动保存到浏览器本地。</p>
+
+        <label for="adminPassword">管理密码</label>
+        <input id="adminPassword" type="password" placeholder="用于添加网站和分类" autocomplete="current-password" />
+        <p class="hint">没有密码时只能读取分类，添加操作会被后端拒绝；密码会保存在本机浏览器。</p>
       </section>
 
       <section class="panel">

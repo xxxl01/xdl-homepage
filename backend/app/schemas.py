@@ -63,3 +63,38 @@ class NavigationCategoryOut(BaseModel):
     description: str | None
     sort_order: int
     items: list[NavItemOut]
+
+
+class BookmarkImportItem(BaseModel):
+    title: str = Field(..., min_length=1, max_length=100)
+    url: str = Field(..., min_length=1, max_length=500)
+    description: str | None = Field(default=None, max_length=255)
+    icon: str | None = Field(default=None, max_length=255)
+
+
+class BookmarkImportCategory(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    items: list[BookmarkImportItem]
+
+
+class BookmarkImportRequest(BaseModel):
+    categories: list[BookmarkImportCategory]
+
+
+class BookmarkImportResult(BaseModel):
+    created_categories: int
+    reused_categories: int
+    created_items: int
+
+
+class NavItemBatchDeleteRequest(BaseModel):
+    item_ids: list[int] = Field(..., min_length=1)
+
+
+class NavItemBatchMoveRequest(BaseModel):
+    item_ids: list[int] = Field(..., min_length=1)
+    category_id: int
+
+
+class NavItemBatchResult(BaseModel):
+    affected_items: int
