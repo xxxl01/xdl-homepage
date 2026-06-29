@@ -30,11 +30,8 @@ ghcr.io/<你的 GitHub 用户名或组织名>/<仓库名>:v1.0.0
 mkdir -p backend
 cat > backend/.env <<'EOF'
 APP_NAME=xdl-homepage-api
-DB_HOST=你的数据库地址
-DB_PORT=3306
-DB_NAME=xdl-homepage
-DB_USER=你的数据库用户
-DB_PASSWORD=你的数据库密码
+DB_PATH=./data/xdl-homepage.db
+ADMIN_PASSWORD=你的管理密码
 EOF
 ```
 
@@ -56,6 +53,8 @@ IMAGE=ghcr.io/<你的 GitHub 用户名或组织名>/<仓库名>:latest docker co
 ```text
 http://服务器IP:8100/
 ```
+
+数据库文件 `backend/data/xdl-homepage.db` 和 favicon 缓存 `backend/storage/` 通过 volume 挂载到宿主机，容器重启或更新数据不会丢失。
 
 健康检查：
 

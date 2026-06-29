@@ -10,8 +10,7 @@ settings = get_settings()
 
 engine = create_engine(
     settings.database_url,
-    pool_pre_ping=True,
-    pool_recycle=3600,
+    connect_args={"check_same_thread": False},
 )
 
 SessionLocal = sessionmaker(
