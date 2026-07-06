@@ -16,7 +16,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
-from app.database import get_db
+from app.database import Base, engine, get_db
 from app.models import NavCategory, NavItem
 from app.schemas import (
     BookmarkImportRequest,
@@ -42,6 +42,8 @@ FAVICON_DIR = PROJECT_ROOT / "backend" / "storage" / "favicons"
 FAVICON_MAX_BYTES = 256 * 1024
 HTML_MAX_BYTES = 512 * 1024
 FAVICON_CACHE_CONTROL = "public, max-age=31536000, immutable"
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title=settings.app_name)
 
