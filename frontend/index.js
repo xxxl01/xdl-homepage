@@ -4,21 +4,16 @@ const categoryList = document.querySelector("#categoryList");
 const summary = document.querySelector("#summary");
 const editDialog = document.querySelector("#editDialog");
 const searchForm = document.querySelector("#searchForm");
-const searchEngineButtons = [
-  ...document.querySelectorAll(".search-engine-btn"),
-];
 const searchInput = document.querySelector("#searchInput");
 const bookmarkFile = document.querySelector("#bookmarkFile");
 const batchBar = document.querySelector("#batchBar");
 const batchInfo = document.querySelector("#batchInfo");
 const loadingOverlay = document.querySelector("#loadingOverlay");
 const loadingText = document.querySelector("#loadingText");
-const SEARCH_ENGINE_KEY = "xdl_homepage_search_engine";
 const ADMIN_PASSWORD_KEY = "xdl_homepage_admin_password";
 const adminPasswordInput = document.querySelector("#adminPassword");
 let navigationData = [];
 let siteSearchQuery = "";
-let searchEngine = localStorage.getItem(SEARCH_ENGINE_KEY) || "google";
 const selectedItemIds = new Set();
 let loadingCount = 0;
 const viewState = reactive({
@@ -94,16 +89,10 @@ createApp({
       `,
 }).mount(app);
 
-setSearchEngine(searchEngine, false);
 adminPasswordInput.value = localStorage.getItem(ADMIN_PASSWORD_KEY) || "";
 init();
 document.addEventListener("click", handleActionClick);
 searchForm.addEventListener("submit", handleSearchSubmit);
-searchEngineButtons.forEach((button) => {
-  button.addEventListener("click", () =>
-    setSearchEngine(button.dataset.engine),
-  );
-});
 searchInput.addEventListener("input", handleSearchInput);
 bookmarkFile.addEventListener("change", handleBookmarkFileChange);
 app.addEventListener("change", handleItemSelectionChange);
@@ -156,48 +145,15 @@ function render(categories) {
 function handleSearchSubmit(event) {
   event.preventDefault();
   const keyword = searchInput.value.trim();
-  const engine = searchEngine;
-  localStorage.setItem(SEARCH_ENGINE_KEY, searchEngine);
+  applySiteSearch(keyword);
+  if (!keyword) return;
 
-  if (!keyword) {
-    if (engine === "site") applySiteSearch("");
-    return;
-  }
-
-  if (engine === "site") {
-    applySiteSearch(keyword);
-    return;
-  }
-
-  const url =
-    engine === "baidu"
-      ? `https://www.baidu.com/s?wd=${encodeURIComponent(keyword)}`
-      : `https://www.google.com/search?q=${encodeURIComponent(keyword)}`;
+  const url = `https://www.google.com/search?q=${encodeURIComponent(keyword)}`;
   window.open(url, "_blank", "noopener,noreferrer");
 }
 
-function setSearchEngine(engine, shouldApply = true) {
-  searchEngine = engine || "google";
-  localStorage.setItem(SEARCH_ENGINE_KEY, searchEngine);
-  searchEngineButtons.forEach((button) => {
-    const active = button.dataset.engine === searchEngine;
-    button.classList.toggle("active", active);
-    button.setAttribute("aria-checked", active ? "true" : "false");
-  });
-
-  if (!shouldApply) return;
-
-  if (searchEngine === "site") {
-    applySiteSearch(searchInput.value.trim());
-    return;
-  }
-  if (siteSearchQuery) applySiteSearch("");
-}
-
 function handleSearchInput() {
-  if (searchEngine === "site") {
-    applySiteSearch(searchInput.value.trim());
-  }
+  applySiteSearch(searchInput.value.trim());
 }
 
 function applySiteSearch(keyword) {
@@ -491,7 +447,7 @@ async function batchMoveItems() {
 
 async function createCategory() {
   const payload = await openCategoryDialog(
-    { name: "", description: "", sort_order: 0 },
+    { name: "", description: "" },
     "新增分类",
   );
   if (!payload) return;
@@ -537,7 +493,6 @@ async function createItem(categoryId) {
       url: "",
       description: "",
       icon: "",
-      sort_order: 0,
     },
     "新增网站",
   );
@@ -579,7 +534,7 @@ async function deleteItem(itemId) {
 function openCategoryDialog(category, title) {
   return openFormDialog({
     title,
-    subtitle: "用于侧边栏分组和页面分区排序。",
+    subtitle: "用于侧边栏分组和页面分区。",
     submitText: "保存分类",
     fields: [
       {
@@ -597,18 +552,10 @@ function openCategoryDialog(category, title) {
         value: category.description || "",
         placeholder: "可留空",
       },
-      {
-        name: "sort_order",
-        label: "排序值",
-        type: "number",
-        value: category.sort_order ?? 0,
-        placeholder: "数字越小越靠前",
-      },
     ],
     onSubmit: (data) => ({
       name: data.name.trim(),
       description: data.description.trim() || null,
-      sort_order: Number(data.sort_order) || 0,
     }),
   });
 }
@@ -660,13 +607,6 @@ function openItemDialog(item, title) {
         value: item.icon || "",
         placeholder: "可留空",
       },
-      {
-        name: "sort_order",
-        label: "排序值",
-        type: "number",
-        value: item.sort_order ?? 0,
-        placeholder: "数字越小越靠前",
-      },
     ],
     onSubmit: (data) => ({
       category_id: Number(data.category_id),
@@ -674,7 +614,6 @@ function openItemDialog(item, title) {
       url: data.url.trim(),
       description: data.description.trim() || null,
       icon: data.icon.trim() || null,
-      sort_order: Number(data.sort_order) || 0,
     }),
   });
 }

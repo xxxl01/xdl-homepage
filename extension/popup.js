@@ -146,8 +146,7 @@ async function addCategory() {
       method: "POST",
       body: {
         name,
-        description: description || null,
-        sort_order: 0
+        description: description || null
       }
     });
     elements.categoryName.value = "";
@@ -190,8 +189,7 @@ function buildItemPayload() {
     title: elements.title.value.trim(),
     url: elements.url.value.trim(),
     description: elements.description.value.trim() || null,
-    icon: null,
-    sort_order: 0
+    icon: null
   };
 }
 

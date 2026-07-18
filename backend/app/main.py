@@ -12,7 +12,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
@@ -114,7 +114,9 @@ def list_categories(db: Session = Depends(get_db)) -> list[NavCategory]:
 
 @app.post("/api/categories", response_model=NavCategoryOut, status_code=status.HTTP_201_CREATED)
 def create_category(payload: NavCategoryCreate, db: Session = Depends(get_db)) -> NavCategory:
-    category = NavCategory(**payload.model_dump())
+    data = payload.model_dump()
+    max_sort_order = db.scalar(select(func.max(NavCategory.sort_order))) or 0
+    category = NavCategory(**data, sort_order=max_sort_order + 1)
     db.add(category)
     db.commit()
     db.refresh(category)
@@ -161,7 +163,11 @@ def list_items(category_id: int | None = None, db: Session = Depends(get_db)) ->
 @app.post("/api/items", response_model=NavItemOut, status_code=status.HTTP_201_CREATED)
 def create_item(payload: NavItemCreate, db: Session = Depends(get_db)) -> NavItem:
     ensure_category_exists(db, payload.category_id)
-    item = NavItem(**payload.model_dump())
+    data = payload.model_dump()
+    max_sort_order = db.scalar(
+        select(func.max(NavItem.sort_order)).where(NavItem.category_id == payload.category_id)
+    ) or 0
+    item = NavItem(**data, sort_order=max_sort_order + 1)
     db.add(item)
     db.commit()
     db.refresh(item)
@@ -269,7 +275,13 @@ def import_bookmarks(payload: BookmarkImportRequest, db: Session = Depends(get_d
         category.name.strip().lower(): category
         for category in existing_categories
     }
-    max_sort_order = max((category.sort_order for category in existing_categories), default=0)
+    max_category_sort_order = max((category.sort_order for category in existing_categories), default=0)
+    max_item_sort_orders = {
+        category.id: db.scalar(
+            select(func.max(NavItem.sort_order)).where(NavItem.category_id == category.id)
+        ) or 0
+        for category in existing_categories
+    }
     created_categories = 0
     reused_categories = 0
     created_items = 0
@@ -282,32 +294,34 @@ def import_bookmarks(payload: BookmarkImportRequest, db: Session = Depends(get_d
         category_key = category_name.lower()
         category = categories_by_name.get(category_key)
         if category is None:
-            max_sort_order += 10
+            max_category_sort_order += 1
             category = NavCategory(
                 name=category_name,
                 description="从浏览器书签导入",
-                sort_order=max_sort_order,
+                sort_order=max_category_sort_order,
             )
             db.add(category)
             db.flush()
             categories_by_name[category_key] = category
+            max_item_sort_orders[category.id] = 0
             created_categories += 1
         else:
             reused_categories += 1
 
-        for index, item in enumerate(import_category.items):
+        for item in import_category.items:
             title = item.title.strip()
             url = item.url.strip()
             if not title or not url:
                 continue
 
+            max_item_sort_orders[category.id] = max_item_sort_orders.get(category.id, 0) + 1
             db.add(NavItem(
                 category_id=category.id,
                 title=title,
                 url=url,
                 description=item.description,
                 icon=item.icon,
-                sort_order=index,
+                sort_order=max_item_sort_orders[category.id],
             ))
             created_items += 1
 

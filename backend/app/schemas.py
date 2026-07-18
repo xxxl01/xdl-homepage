@@ -6,7 +6,6 @@ from pydantic import BaseModel, ConfigDict, Field
 class NavCategoryBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     description: str | None = Field(default=None, max_length=255)
-    sort_order: int = 0
 
 
 class NavCategoryCreate(NavCategoryBase):
@@ -16,13 +15,13 @@ class NavCategoryCreate(NavCategoryBase):
 class NavCategoryUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=100)
     description: str | None = Field(default=None, max_length=255)
-    sort_order: int | None = None
 
 
 class NavCategoryOut(NavCategoryBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    sort_order: int
     created_at: datetime
     updated_at: datetime
 
@@ -33,7 +32,6 @@ class NavItemBase(BaseModel):
     url: str = Field(..., min_length=1, max_length=500)
     description: str | None = Field(default=None, max_length=255)
     icon: str | None = Field(default=None, max_length=255)
-    sort_order: int = 0
 
 
 class NavItemCreate(NavItemBase):
@@ -46,13 +44,13 @@ class NavItemUpdate(BaseModel):
     url: str | None = Field(default=None, min_length=1, max_length=500)
     description: str | None = Field(default=None, max_length=255)
     icon: str | None = Field(default=None, max_length=255)
-    sort_order: int | None = None
 
 
 class NavItemOut(NavItemBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    sort_order: int
     created_at: datetime
     updated_at: datetime
 

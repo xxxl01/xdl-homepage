@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>XDL Homepage</title>
+  <title>Homepage</title>
   <link rel="icon" type="image/png" href="/assets/xdl-homepage-icon.png" />
   <link rel="stylesheet" href="/index.css" />
 </head>
@@ -11,10 +11,9 @@
   <div class="layout">
     <aside class="sidebar">
       <div class="brand">
-        <div class="brand-mark"><img src="/assets/xdl-homepage-icon.webp" alt="XDL Homepage" /></div>
+        <div class="brand-mark"><img src="/assets/xdl-homepage-icon.webp" alt="Homepage" /></div>
         <div>
           <p class="brand-title">Homepage</p>
-          <div class="brand-subtitle">简洁导航</div>
         </div>
       </div>
       <p class="side-label">分类</p>
@@ -24,21 +23,7 @@
     <main class="content">
       <header class="topbar">
         <form id="searchForm" class="search-form">
-          <div class="search-engine-switch" role="radiogroup" aria-label="搜索方式">
-            <button class="search-engine-btn" type="button" data-engine="site" role="radio" aria-checked="false">
-              <i data-lucide="panel-top"></i>
-              站内
-            </button>
-            <button class="search-engine-btn" type="button" data-engine="google" role="radio" aria-checked="false">
-              <img class="search-engine-icon" src="/assets/google.svg" alt="" />
-              谷歌
-            </button>
-            <button class="search-engine-btn" type="button" data-engine="baidu" role="radio" aria-checked="false">
-              <img class="search-engine-icon" src="/assets/baidu.svg" alt="" />
-              百度
-            </button>
-          </div>
-          <input id="searchInput" type="search" placeholder="搜索网站，或使用搜索引擎搜索" autocomplete="off" />
+          <input id="searchInput" type="search" placeholder="站内搜索网站，回车或点击按钮使用搜索引擎" autocomplete="off" />
           <button class="search-btn" type="submit" aria-label="搜索">
             <i data-lucide="search"></i>
           </button>
