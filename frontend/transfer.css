@@ -1,0 +1,173 @@
+.transfer-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px clamp(18px, 3vw, 38px);
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+
+.transfer-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.transfer-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 850;
+  letter-spacing: -0.04em;
+}
+
+.transfer-subtitle {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.transfer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.transfer-main {
+  padding: 22px clamp(18px, 3vw, 38px) 42px;
+}
+
+.transfer-list {
+  display: grid;
+  gap: 8px;
+  max-width: 860px;
+}
+
+.transfer-card {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 9px 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    background 150ms ease;
+}
+
+.transfer-card:hover {
+  transform: translateY(-2px);
+  background: #fbfbfb;
+  border-color: #9f9fa4;
+}
+
+.transfer-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  color: #ffffff;
+  background: #111111;
+  border-radius: 10px;
+}
+
+.transfer-icon svg {
+  width: 17px;
+  height: 17px;
+  stroke-width: 2;
+}
+
+.transfer-body {
+  min-width: 0;
+}
+
+.transfer-name {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.transfer-meta {
+  overflow: hidden;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.transfer-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.transfer-card-actions .btn {
+  width: 26px;
+  height: 24px;
+  padding: 0;
+  font-size: 11px;
+  border-radius: 8px;
+}
+
+.transfer-card-actions .btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.mode-switch {
+  display: flex;
+  gap: 8px;
+}
+
+.mode-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  color: #3f3f46;
+  background: #fafafa;
+  border: 1px solid #d4d4d8;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 750;
+  transition: 150ms ease;
+}
+
+.mode-option:has(input:checked) {
+  color: #111111;
+  background: #ffffff;
+  border-color: #18181b;
+  box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.08);
+}
+
+.mode-option input {
+  accent-color: #111111;
+}
+
+.field-hint {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+@media (max-width: 640px) {
+  .transfer-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

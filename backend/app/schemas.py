@@ -96,3 +96,47 @@ class NavItemBatchMoveRequest(BaseModel):
 
 class NavItemBatchResult(BaseModel):
     affected_items: int
+
+
+class TransferTextCreate(BaseModel):
+    """新增文字记录。"""
+
+    title: str | None = Field(default=None, max_length=200)
+    content: str = Field(..., min_length=1)
+
+
+class TransferTextUpdate(BaseModel):
+    """编辑文字记录。"""
+
+    title: str | None = Field(default=None, max_length=200)
+    content: str | None = Field(default=None, min_length=1)
+
+
+class TransferOut(BaseModel):
+    """传输记录输出，列表与详情共用；content 仅在详情接口返回。"""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    kind: str
+    title: str | None
+    content: str | None
+    filename: str | None
+    filesize: int | None
+    mime_type: str | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class TransferListItemOut(BaseModel):
+    """传输记录列表项，不返回文字全文，保证列表轻量。"""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    kind: str
+    title: str | None
+    filename: str | None
+    filesize: int | None
+    created_at: datetime
+    updated_at: datetime

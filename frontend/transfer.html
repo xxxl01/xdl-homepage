@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>传输 · Homepage</title>
+  <link rel="icon" type="image/png" href="/assets/xdl-homepage-icon.png" />
+  <link rel="stylesheet" href="/index.css" />
+  <link rel="stylesheet" href="/transfer.css" />
+</head>
+<body>
+  <header class="transfer-topbar">
+    <div class="transfer-title-wrap">
+      <div class="brand-mark"><img src="/assets/xdl-homepage-icon.webp" alt="Homepage" /></div>
+      <div>
+        <p class="transfer-title">传输记录</p>
+        <p class="transfer-subtitle">多设备之间传文字和文件：在这里写入，在别的设备复制或下载</p>
+      </div>
+    </div>
+    <div class="transfer-actions">
+      <input id="adminPassword" class="admin-password" type="password" placeholder="管理密码" autocomplete="current-password" title="用于新增、编辑和删除，自动保存在本机浏览器" />
+      <button class="btn primary" type="button" data-action="create">
+        <i data-lucide="plus"></i>
+        新增
+      </button>
+    </div>
+  </header>
+
+  <main class="transfer-main">
+    <div id="transferList" class="transfer-list">加载中...</div>
+  </main>
+
+  <dialog id="transferDialog" class="dialog"></dialog>
+  <div id="loadingOverlay" class="loading-overlay" aria-live="polite" aria-busy="true">
+    <div class="loading-box">
+      <div class="spinner"></div>
+      <div id="loadingText">正在处理，请稍候...</div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="/transfer.js"></script>
+</body>
+</html>

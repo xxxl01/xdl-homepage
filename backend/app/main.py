@@ -6,18 +6,19 @@ from pathlib import Path
 from urllib.error import URLError
 from urllib.parse import urljoin, urlparse
 from urllib.request import Request as UrlRequest, urlopen
+from uuid import uuid4
 from zipfile import ZIP_DEFLATED, ZipFile
 
-from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.database import Base, engine, get_db
-from app.models import NavCategory, NavItem
+from app.models import NavCategory, NavItem, TransferRecord
 from app.schemas import (
     BookmarkImportRequest,
     BookmarkImportResult,
@@ -31,6 +32,10 @@ from app.schemas import (
     NavItemOut,
     NavItemUpdate,
     NavigationCategoryOut,
+    TransferListItemOut,
+    TransferOut,
+    TransferTextCreate,
+    TransferTextUpdate,
 )
 
 
@@ -39,8 +44,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
 EXTENSION_DIR = PROJECT_ROOT / "extension"
 FAVICON_DIR = PROJECT_ROOT / "backend" / "storage" / "favicons"
+TRANSFER_DIR = PROJECT_ROOT / "backend" / "storage" / "transfers"
 FAVICON_MAX_BYTES = 256 * 1024
 HTML_MAX_BYTES = 512 * 1024
+TRANSFER_MAX_BYTES = 500 * 1024 * 1024
 FAVICON_CACHE_CONTROL = "public, max-age=31536000, immutable"
 
 Base.metadata.create_all(bind=engine)
@@ -495,6 +502,154 @@ def build_fallback_svg(item: NavItem) -> str:
   <rect width="64" height="64" rx="16" fill="#111111"/>
   <text x="32" y="39" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#ffffff">{safe_label}</text>
 </svg>'''
+
+
+@app.get("/api/transfers", response_model=list[TransferListItemOut])
+def list_transfers(
+    kind: str | None = None,
+    db: Session = Depends(get_db),
+) -> list[TransferRecord]:
+    """传输记录列表。kind 可选 text / file，不返回文字全文。"""
+
+    stmt = select(TransferRecord)
+    if kind in {"text", "file"}:
+        stmt = stmt.where(TransferRecord.kind == kind)
+    stmt = stmt.order_by(TransferRecord.created_at.desc(), TransferRecord.id.desc())
+    return list(db.scalars(stmt).all())
+
+
+@app.post("/api/transfers/text", response_model=TransferOut, status_code=status.HTTP_201_CREATED)
+def create_transfer_text(payload: TransferTextCreate, db: Session = Depends(get_db)) -> TransferRecord:
+    """新增文字记录。"""
+
+    record = TransferRecord(
+        kind="text",
+        title=payload.title.strip() or None,
+        content=payload.content,
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    return record
+
+
+@app.patch("/api/transfers/{transfer_id}", response_model=TransferOut)
+def update_transfer(
+    transfer_id: int,
+    payload: TransferTextUpdate,
+    db: Session = Depends(get_db),
+) -> TransferRecord:
+    """编辑文字记录的标题或内容，文件记录不支持编辑内容。"""
+
+    record = db.get(TransferRecord, transfer_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="传输记录不存在")
+    if record.kind != "text":
+        raise HTTPException(status_code=400, detail="文件记录不支持编辑")
+
+    data = payload.model_dump(exclude_unset=True)
+    if "title" in data:
+        data["title"] = (data["title"] or "").strip() or None
+    for key, value in data.items():
+        setattr(record, key, value)
+    db.commit()
+    db.refresh(record)
+    return record
+
+
+@app.post("/api/transfers/file", response_model=TransferOut, status_code=status.HTTP_201_CREATED)
+def upload_transfer_file(
+    file: UploadFile = File(...),
+    title: str | None = Form(default=None),
+    db: Session = Depends(get_db),
+) -> TransferRecord:
+    """上传文件，分块写入磁盘，超限时中断并清理已写内容。"""
+
+    TRANSFER_DIR.mkdir(parents=True, exist_ok=True)
+    suffix = Path(file.filename or "").suffix
+    safe_suffix = "".join(char for char in suffix if char.isalnum() or char in {".", "-", "_"})[:20]
+    stored_path = TRANSFER_DIR / f"{uuid4().hex}{safe_suffix}"
+
+    size = 0
+    try:
+        with stored_path.open("wb") as out_file:
+            while True:
+                chunk = file.file.read(1024 * 1024)
+                if not chunk:
+                    break
+                size += len(chunk)
+                if size > TRANSFER_MAX_BYTES:
+                    raise HTTPException(
+                        status_code=413,
+                        detail=f"文件超过大小限制 {TRANSFER_MAX_BYTES // (1024 * 1024)}MB",
+                    )
+                out_file.write(chunk)
+    except HTTPException:
+        stored_path.unlink(missing_ok=True)
+        raise
+    except Exception:
+        stored_path.unlink(missing_ok=True)
+        raise HTTPException(status_code=400, detail="文件上传失败")
+
+    record = TransferRecord(
+        kind="file",
+        title=(title or "").strip() or None,
+        stored_name=stored_path.name,
+        filename=file.filename,
+        filesize=size,
+        mime_type=file.content_type or "application/octet-stream",
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    return record
+
+
+@app.get("/api/transfers/{transfer_id}", response_model=TransferOut)
+def get_transfer(transfer_id: int, db: Session = Depends(get_db)) -> TransferRecord:
+    """传输记录详情，文字记录返回全文。"""
+
+    record = db.get(TransferRecord, transfer_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="传输记录不存在")
+    return record
+
+
+@app.get("/api/transfers/{transfer_id}/download")
+def download_transfer_file(transfer_id: int, db: Session = Depends(get_db)) -> FileResponse:
+    """下载文件记录，还原原始文件名。"""
+
+    record = db.get(TransferRecord, transfer_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="传输记录不存在")
+    if record.kind != "file" or not record.stored_name:
+        raise HTTPException(status_code=400, detail="该记录不是文件，无法下载")
+
+    stored_path = TRANSFER_DIR / record.stored_name
+    if not stored_path.exists():
+        raise HTTPException(status_code=404, detail="文件已丢失，无法下载")
+
+    return FileResponse(
+        stored_path,
+        media_type=record.mime_type or "application/octet-stream",
+        filename=record.filename or f"transfer-{record.id}",
+    )
+
+
+@app.delete("/api/transfers/{transfer_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_transfer(transfer_id: int, db: Session = Depends(get_db)) -> None:
+    """删除传输记录，同时删除磁盘上的文件。"""
+
+    record = db.get(TransferRecord, transfer_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="传输记录不存在")
+
+    if record.kind == "file" and record.stored_name:
+        stored_path = TRANSFER_DIR / record.stored_name
+        if stored_path.exists():
+            stored_path.unlink()
+    db.delete(record)
+    db.commit()
 
 
 @app.get("/downloads/extension.zip")
