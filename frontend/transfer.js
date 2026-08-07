@@ -102,30 +102,19 @@ async function openCreateDialog() {
         <div class="dialog-head">
           <div>
             <h2 class="dialog-title">新增传输记录</h2>
-            <p class="dialog-subtitle">选择内容类型：文字直接记录，文件上传保存。</p>
+            <p class="dialog-subtitle">选择文件或输入文字，标题自动生成。</p>
           </div>
           <button class="dialog-close" value="cancel" type="button" aria-label="关闭">${iconSvg("x")}</button>
         </div>
         <div class="form-grid">
           <div class="field">
-            <label>内容类型</label>
-            <div class="mode-switch">
-              <label class="mode-option"><input type="radio" name="mode" value="text" checked>${iconSvg("file-text")}文字记录</label>
-              <label class="mode-option"><input type="radio" name="mode" value="file">${iconSvg("file-archive")}上传文件</label>
-            </div>
-          </div>
-          <div class="field" data-mode-field="text">
-            <label for="field-create-title">标题</label>
-            <input id="field-create-title" name="title" type="text" placeholder="可选，用于列表识别">
-          </div>
-          <div class="field" data-mode-field="text">
-            <label for="field-create-content">文字内容</label>
-            <textarea id="field-create-content" name="content" placeholder="要传输的文字内容" required></textarea>
-          </div>
-          <div class="field" data-mode-field="file" hidden>
             <label for="field-create-file">选择文件</label>
             <input id="field-create-file" name="file" type="file">
-            <p class="field-hint">单文件最大 500MB</p>
+            <p class="field-hint">选择文件则按文件传输，标题自动使用文件名；不选文件时按文字传输，标题自动截取内容</p>
+          </div>
+          <div class="field">
+            <label for="field-create-content">文字内容</label>
+            <textarea id="field-create-content" name="content" placeholder="输入要传输的文字（不选文件时必填）"></textarea>
           </div>
         </div>
         <div class="dialog-actions">
@@ -137,9 +126,8 @@ async function openCreateDialog() {
 
     renderIcons();
     const form = editDialog.querySelector("form");
-    const titleInput = form.querySelector("#field-create-title");
-    const contentInput = form.querySelector("#field-create-content");
     const fileInput = form.querySelector("#field-create-file");
+    const contentInput = form.querySelector("#field-create-content");
     let settled = false;
 
     const finish = (value) => {
@@ -150,17 +138,6 @@ async function openCreateDialog() {
       resolve(value);
     };
 
-    const switchMode = () => {
-      const isText = form.querySelector('input[name="mode"]:checked').value === "text";
-      form.querySelectorAll("[data-mode-field]").forEach((field) => {
-        field.hidden = !(isText === (field.dataset.modeField === "text"));
-      });
-      if (isText) titleInput.focus();
-    };
-
-    form.querySelectorAll('input[name="mode"]').forEach((input) =>
-      input.addEventListener("change", switchMode),
-    );
     form.querySelectorAll('[value="cancel"]').forEach((button) =>
       button.addEventListener("click", () => finish(null)),
     );
@@ -174,20 +151,23 @@ async function openCreateDialog() {
     );
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      const isText = form.querySelector('input[name="mode"]:checked').value === "text";
-      if (isText) {
-        const content = contentInput.value.trim();
-        if (!content) return;
-        finish({ mode: "text", title: titleInput.value.trim() || null, content });
+      const file = fileInput.files?.[0];
+      const content = contentInput.value.trim();
+      if (!file && !content) {
+        contentInput.setCustomValidity("请选择文件或输入文字");
+        contentInput.reportValidity();
+        contentInput.setCustomValidity("");
+        return;
+      }
+      if (file) {
+        finish({ mode: "file", file });
       } else {
-        const file = fileInput.files?.[0];
-        if (!file) return;
-        finish({ mode: "file", title: titleInput.value.trim() || null, file });
+        finish({ mode: "text", content });
       }
     });
 
     editDialog.showModal();
-    titleInput.focus();
+    contentInput.focus();
   });
 
   if (!result) return;
@@ -195,12 +175,10 @@ async function openCreateDialog() {
   await withLoading("正在保存...", async () => {
     if (result.mode === "text") {
       await request("/api/transfers/text", "POST", {
-        title: result.title,
         content: result.content,
       });
     } else {
       const formData = new FormData();
-      if (result.title) formData.append("title", result.title);
       formData.append("file", result.file);
       await request("/api/transfers/file", "POST", formData);
     }

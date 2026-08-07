@@ -524,7 +524,7 @@ def create_transfer_text(payload: TransferTextCreate, db: Session = Depends(get_
 
     record = TransferRecord(
         kind="text",
-        title=payload.title.strip() or None,
+        title=(payload.title or "").strip() or payload.content.strip()[:20],
         content=payload.content,
     )
     db.add(record)
@@ -549,7 +549,8 @@ def update_transfer(
 
     data = payload.model_dump(exclude_unset=True)
     if "title" in data:
-        data["title"] = (data["title"] or "").strip() or None
+        fallback_content = data.get("content") or record.content or ""
+        data["title"] = (data["title"] or "").strip() or fallback_content.strip()[:20]
     for key, value in data.items():
         setattr(record, key, value)
     db.commit()
@@ -593,7 +594,7 @@ def upload_transfer_file(
 
     record = TransferRecord(
         kind="file",
-        title=(title or "").strip() or None,
+        title=(title or "").strip() or (file.filename or "未命名文件"),
         stored_name=stored_path.name,
         filename=file.filename,
         filesize=size,
