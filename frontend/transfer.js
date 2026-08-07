@@ -55,6 +55,7 @@ function renderCard(record) {
         <button class="btn" type="button" data-action="edit" data-id="${record.id}" title="编辑">${iconSvg("pencil")}</button>
       `
     : `
+        ${canPreview(record) ? `<button class="btn" type="button" data-action="preview" data-id="${record.id}" title="在线查看">${iconSvg("eye")}</button>` : ""}
         <a class="btn" href="/api/transfers/${record.id}/download" title="下载">${iconSvg("download")}</a>
       `;
 
@@ -84,6 +85,7 @@ async function handleActionClick(event) {
     if (action === "create") await openCreateDialog();
     if (action === "copy") await copyTransfer(recordId);
     if (action === "edit") await editTransfer(recordId);
+    if (action === "preview") await previewTransfer(recordId);
     if (action === "delete") await deleteTransfer(recordId);
   } catch (error) {
     console.error("操作失败：", error);
@@ -288,6 +290,61 @@ async function copyTransfer(recordId) {
     message: content.length > 80 ? `${content.slice(0, 80)}...` : content,
     type: "success",
   });
+}
+
+function canPreview(record) {
+  const name = record.filename || "";
+  return /\.(md|markdown|txt)$/i.test(name);
+}
+
+async function previewTransfer(recordId) {
+  const result = await withLoading("正在加载文件内容...", () =>
+    request(`/api/transfers/${recordId}/preview`),
+  );
+  const isMarkdown = /\.(md|markdown)$/i.test(result.filename);
+  const html = isMarkdown && window.marked
+    ? window.marked.parse(result.content)
+    : escapeHtml(result.content).replace(/\n/g, "<br>");
+
+  editDialog.innerHTML = `
+    <div class="dialog-form preview-dialog">
+      <div class="dialog-head">
+        <div class="preview-title-wrap">
+          <h2 class="dialog-title">${escapeHtml(result.filename)}</h2>
+          <p class="dialog-subtitle">${isMarkdown ? "Markdown 渲染预览" : "纯文本预览"}</p>
+        </div>
+        <button class="dialog-close" type="button" data-preview-close aria-label="关闭">${iconSvg("x")}</button>
+      </div>
+      <div class="preview-body">${html}</div>
+      <div class="dialog-actions">
+        <a class="btn primary" href="/api/transfers/${recordId}/download">${iconSvg("download")}下载</a>
+        <button class="btn" type="button" data-preview-close>${iconSvg("x")}关闭</button>
+      </div>
+    </div>
+  `;
+  renderIcons();
+
+  let settled = false;
+  const finish = () => {
+    if (settled) return;
+    settled = true;
+    editDialog.close();
+    editDialog.innerHTML = "";
+  };
+
+  editDialog.querySelectorAll("[data-preview-close]").forEach((button) => {
+    button.addEventListener("click", finish);
+  });
+  editDialog.addEventListener(
+    "cancel",
+    (event) => {
+      event.preventDefault();
+      finish();
+    },
+    { once: true },
+  );
+
+  editDialog.showModal();
 }
 
 async function deleteTransfer(recordId) {

@@ -48,6 +48,8 @@ TRANSFER_DIR = PROJECT_ROOT / "backend" / "storage" / "transfers"
 FAVICON_MAX_BYTES = 256 * 1024
 HTML_MAX_BYTES = 512 * 1024
 TRANSFER_MAX_BYTES = 500 * 1024 * 1024
+PREVIEW_MAX_BYTES = 1024 * 1024
+PREVIEW_TEXT_EXTENSIONS = {".md", ".markdown", ".txt"}
 FAVICON_CACHE_CONTROL = "public, max-age=31536000, immutable"
 
 Base.metadata.create_all(bind=engine)
@@ -635,6 +637,31 @@ def download_transfer_file(transfer_id: int, db: Session = Depends(get_db)) -> F
         media_type=record.mime_type or "application/octet-stream",
         filename=record.filename or f"transfer-{record.id}",
     )
+
+
+@app.get("/api/transfers/{transfer_id}/preview")
+def preview_transfer_file(transfer_id: int, db: Session = Depends(get_db)) -> dict[str, str]:
+    """在线查看 md/txt 文件内容，仅支持文本类型且不超过 1MB。"""
+
+    record = db.get(TransferRecord, transfer_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="传输记录不存在")
+    if record.kind != "file" or not record.stored_name:
+        raise HTTPException(status_code=400, detail="该记录不是文件，无法在线查看")
+
+    stored_path = TRANSFER_DIR / record.stored_name
+    if not stored_path.exists():
+        raise HTTPException(status_code=404, detail="文件已丢失，无法在线查看")
+    if stored_path.suffix.lower() not in PREVIEW_TEXT_EXTENSIONS:
+        raise HTTPException(status_code=400, detail="该文件类型不支持在线查看，请下载后打开")
+
+    data = stored_path.read_bytes()
+    if len(data) > PREVIEW_MAX_BYTES:
+        raise HTTPException(status_code=413, detail="文件超过 1MB，请下载后查看")
+    return {
+        "filename": record.filename or stored_path.name,
+        "content": data.decode("utf-8", errors="replace"),
+    }
 
 
 @app.delete("/api/transfers/{transfer_id}", status_code=status.HTTP_204_NO_CONTENT)
