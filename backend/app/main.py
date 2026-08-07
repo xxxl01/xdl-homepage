@@ -67,9 +67,14 @@ app.add_middleware(
 
 @app.middleware("http")
 async def protect_write_requests(request: Request, call_next):
-    """非查询请求必须携带管理密码，未配置密码时禁止修改。"""
+    """非查询请求必须携带管理密码，未配置密码时禁止修改。
+    传输接口的 GET 请求在配置了只读令牌时需携带令牌。"""
 
     if request.method in {"GET", "HEAD", "OPTIONS"}:
+        if settings.read_token and request.url.path.startswith("/api/transfers"):
+            token = request.headers.get("X-Read-Token", "") or request.query_params.get("token", "")
+            if not compare_digest(token, settings.read_token):
+                return JSONResponse(status_code=401, content={"detail": "只读令牌不正确，禁止访问"})
         return await call_next(request)
 
     if not settings.admin_password:

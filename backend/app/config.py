@@ -14,6 +14,7 @@ class Settings:
 
     app_name: str = os.getenv("APP_NAME", "xdl-homepage-api")
     admin_password: str = os.getenv("ADMIN_PASSWORD", "")
+    read_token: str = os.getenv("READ_TOKEN", "")
     _db_path: str | None = os.getenv("DB_PATH", None)
 
     @property

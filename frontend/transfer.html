@@ -19,6 +19,11 @@
     </div>
     <div class="transfer-actions">
       <input id="adminPassword" class="admin-password" type="password" placeholder="管理密码" autocomplete="current-password" title="用于新增、编辑和删除，自动保存在本机浏览器" />
+      <input id="readToken" class="admin-password" type="password" placeholder="查看令牌" autocomplete="off" title="服务器配置了 READ_TOKEN 时填写，用于读取列表和预览，自动保存在本机浏览器" />
+      <button class="btn" type="button" data-action="share-selected" id="shareSelectedBtn" title="复制选中记录的访问链接" disabled>
+        <i data-lucide="share-2"></i>
+        分享选中
+      </button>
       <button class="btn primary" type="button" data-action="create">
         <i data-lucide="plus"></i>
         新增

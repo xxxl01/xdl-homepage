@@ -1,18 +1,27 @@
 const list = document.querySelector("#transferList");
 const editDialog = document.querySelector("#transferDialog");
 const adminPasswordInput = document.querySelector("#adminPassword");
+const readTokenInput = document.querySelector("#readToken");
 const loadingOverlay = document.querySelector("#loadingOverlay");
 const loadingText = document.querySelector("#loadingText");
 const ADMIN_PASSWORD_KEY = "xdl_homepage_admin_password";
+const READ_TOKEN_KEY = "xdl_homepage_read_token";
+const shareSelectedBtn = document.querySelector("#shareSelectedBtn");
 let transferRecords = [];
 let loadingCount = 0;
+const selectedRecordIds = new Set();
 
 adminPasswordInput.value = localStorage.getItem(ADMIN_PASSWORD_KEY) || "";
+readTokenInput.value = localStorage.getItem(READ_TOKEN_KEY) || "";
 init();
 document.addEventListener("click", handleActionClick);
 adminPasswordInput.addEventListener("input", () => {
   localStorage.setItem(ADMIN_PASSWORD_KEY, adminPasswordInput.value);
 });
+readTokenInput.addEventListener("input", () => {
+  localStorage.setItem(READ_TOKEN_KEY, readTokenInput.value.trim());
+});
+list.addEventListener("change", handleItemSelectionChange);
 renderIcons();
 
 async function init() {
@@ -36,6 +45,7 @@ function renderList() {
     return;
   }
   list.innerHTML = transferRecords.map(renderCard).join("");
+  updateShareButton();
   renderIcons();
 }
 
@@ -56,22 +66,44 @@ function renderCard(record) {
       `
     : `
         ${canPreview(record) ? `<button class="btn" type="button" data-action="preview" data-id="${record.id}" title="在线查看">${iconSvg("eye")}</button>` : ""}
-        <a class="btn" href="/api/transfers/${record.id}/download" title="下载">${iconSvg("download")}</a>
+        <a class="btn" href="${downloadUrl(record.id)}" title="下载">${iconSvg("download")}</a>
       `;
 
   return `
     <article class="transfer-card">
+      <input class="transfer-check" type="checkbox" data-item-check="${record.id}" aria-label="选择 ${escapeAttr(name)}" ${selectedRecordIds.has(record.id) ? "checked" : ""}>
       <div class="transfer-icon">${iconSvg(iconName)}</div>
       <div class="transfer-body">
         <div class="transfer-name">${escapeHtml(name)}</div>
         <div class="transfer-meta">${escapeHtml(meta)}</div>
       </div>
       <div class="transfer-card-actions">
+        <button class="btn" type="button" data-action="share" data-id="${record.id}" title="复制访问链接">${iconSvg("share-2")}</button>
         ${actions}
         <button class="btn danger" type="button" data-action="delete" data-id="${record.id}" title="删除">${iconSvg("trash-2")}</button>
       </div>
     </article>
   `;
+}
+
+function handleItemSelectionChange(event) {
+  const checkbox = event.target.closest("[data-item-check]");
+  if (!checkbox) return;
+
+  const recordId = Number(checkbox.dataset.itemCheck);
+  if (checkbox.checked) {
+    selectedRecordIds.add(recordId);
+  } else {
+    selectedRecordIds.delete(recordId);
+  }
+  updateShareButton();
+}
+
+function updateShareButton() {
+  const count = selectedRecordIds.size;
+  shareSelectedBtn.disabled = count === 0;
+  shareSelectedBtn.innerHTML = `${iconSvg("share-2")}分享选中${count ? ` (${count})` : ""}`;
+  if (window.lucide) window.lucide.createIcons(shareSelectedBtn.closest(".transfer-actions"));
 }
 
 async function handleActionClick(event) {
@@ -86,6 +118,8 @@ async function handleActionClick(event) {
     if (action === "copy") await copyTransfer(recordId);
     if (action === "edit") await editTransfer(recordId);
     if (action === "preview") await previewTransfer(recordId);
+    if (action === "share") await shareTransfer(recordId);
+    if (action === "share-selected") await shareSelectedTransfers();
     if (action === "delete") await deleteTransfer(recordId);
   } catch (error) {
     console.error("操作失败：", error);
@@ -297,6 +331,64 @@ function canPreview(record) {
   return /\.(md|markdown|txt)$/i.test(name);
 }
 
+function downloadUrl(recordId) {
+  const token = readTokenInput.value.trim();
+  return token
+    ? `/api/transfers/${recordId}/download?token=${encodeURIComponent(token)}`
+    : `/api/transfers/${recordId}/download`;
+}
+
+function shareUrl(record) {
+  const token = readTokenInput.value.trim();
+  const tokenSuffix = token ? `?token=${encodeURIComponent(token)}` : "";
+  const origin = window.location.origin;
+  if (record.kind === "text") {
+    return `${origin}/api/transfers/${record.id}${tokenSuffix}`;
+  }
+  if (canPreview(record)) {
+    return `${origin}/api/transfers/${record.id}/preview${tokenSuffix}`;
+  }
+  return `${origin}${downloadUrl(record.id)}`;
+}
+
+async function shareTransfer(recordId) {
+  const record = transferRecords.find((item) => item.id === recordId);
+  if (!record) return;
+  await copyToClipboard(shareUrl(record));
+  await openMessageDialog({
+    title: "已复制访问链接",
+    message: shareUrl(record),
+    type: "success",
+  });
+}
+
+async function shareSelectedTransfers() {
+  const records = transferRecords.filter((record) => selectedRecordIds.has(record.id));
+  if (!records.length) return;
+  const urls = records.map(shareUrl).join("\n");
+  await copyToClipboard(urls);
+  await openMessageDialog({
+    title: `已复制 ${records.length} 条访问链接`,
+    message: urls,
+    type: "success",
+  });
+}
+
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    textarea.remove();
+  }
+}
+
 async function previewTransfer(recordId) {
   const result = await withLoading("正在加载文件内容...", () =>
     request(`/api/transfers/${recordId}/preview`),
@@ -317,7 +409,7 @@ async function previewTransfer(recordId) {
       </div>
       <div class="preview-body">${html}</div>
       <div class="dialog-actions">
-        <a class="btn primary" href="/api/transfers/${recordId}/download">${iconSvg("download")}下载</a>
+        <a class="btn primary" href="${downloadUrl(recordId)}">${iconSvg("download")}下载</a>
         <button class="btn" type="button" data-preview-close>${iconSvg("x")}关闭</button>
       </div>
     </div>
@@ -419,6 +511,9 @@ async function request(url, method, payload) {
     const password = adminPasswordInput.value.trim();
     if (!password) throw new Error("请输入管理密码后再修改");
     options.headers["X-Admin-Password"] = password;
+  } else {
+    const token = readTokenInput.value.trim();
+    if (token) options.headers["X-Read-Token"] = token;
   }
 
   if (payload instanceof FormData) {
