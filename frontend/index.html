@@ -23,6 +23,10 @@
     <main class="content">
       <header class="topbar">
         <form id="searchForm" class="search-form">
+          <select id="searchEngine" class="search-engine" aria-label="搜索引擎">
+            <option value="google">谷歌</option>
+            <option value="baidu">百度</option>
+          </select>
           <input id="searchInput" type="search" placeholder="站内搜索网站，回车或点击按钮使用搜索引擎" autocomplete="off" />
           <button class="search-btn" type="submit" aria-label="搜索">
             <i data-lucide="search"></i>
@@ -38,6 +42,10 @@
             <i data-lucide="download"></i>
             下载扩展
           </a>
+          <button class="btn" type="button" data-action="refresh-data" title="重新从服务器获取数据">
+            <i data-lucide="refresh-cw"></i>
+            刷新
+          </button>
           <button class="btn" type="button" data-action="import-bookmarks">
             <i data-lucide="upload"></i>
             导入书签

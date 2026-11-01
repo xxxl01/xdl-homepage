@@ -12,6 +12,13 @@ const loadingOverlay = document.querySelector("#loadingOverlay");
 const loadingText = document.querySelector("#loadingText");
 const ADMIN_PASSWORD_KEY = "xdl_homepage_admin_password";
 const adminPasswordInput = document.querySelector("#adminPassword");
+const NAV_CACHE_KEY = "xdl_homepage_nav_cache";
+const ENGINE_KEY = "xdl_homepage_search_engine";
+const SEARCH_ENGINES = {
+  google: "https://www.google.com/search?q=",
+  baidu: "https://www.baidu.com/s?wd=",
+};
+const searchEngine = document.querySelector("#searchEngine");
 let navigationData = [];
 let siteSearchQuery = "";
 const selectedItemIds = new Set();
@@ -90,6 +97,11 @@ createApp({
 }).mount(app);
 
 adminPasswordInput.value = localStorage.getItem(ADMIN_PASSWORD_KEY) || "";
+const savedEngine = localStorage.getItem(ENGINE_KEY);
+if (savedEngine && SEARCH_ENGINES[savedEngine]) searchEngine.value = savedEngine;
+searchEngine.addEventListener("change", () => {
+  localStorage.setItem(ENGINE_KEY, searchEngine.value);
+});
 init();
 document.addEventListener("click", handleActionClick);
 searchForm.addEventListener("submit", handleSearchSubmit);
@@ -101,9 +113,18 @@ adminPasswordInput.addEventListener("input", () => {
 });
 renderIcons();
 
+function readNavCache() {
+  try {
+    const data = JSON.parse(localStorage.getItem(NAV_CACHE_KEY));
+    return Array.isArray(data) ? data : null;
+  } catch {
+    return null;
+  }
+}
+
 async function init() {
   try {
-    navigationData = await loadNavigation();
+    navigationData = readNavCache() || (await loadNavigation());
     render(filterNavigation(siteSearchQuery));
     bindActiveCategory();
     updateBatchBar();
@@ -120,7 +141,13 @@ async function init() {
 async function loadNavigation() {
   const response = await fetch("/api/navigation");
   if (!response.ok) throw new Error("接口返回异常");
-  return await response.json();
+  const data = await response.json();
+  try {
+    localStorage.setItem(NAV_CACHE_KEY, JSON.stringify(data));
+  } catch {
+    // 缓存写入失败（如容量不足）时忽略
+  }
+  return data;
 }
 
 function render(categories) {
@@ -148,7 +175,8 @@ function handleSearchSubmit(event) {
   applySiteSearch(keyword);
   if (!keyword) return;
 
-  const url = `https://www.google.com/search?q=${encodeURIComponent(keyword)}`;
+  const base = SEARCH_ENGINES[searchEngine.value] || SEARCH_ENGINES.google;
+  const url = base + encodeURIComponent(keyword);
   window.open(url, "_blank", "noopener,noreferrer");
 }
 
@@ -223,6 +251,7 @@ async function handleActionClick(event) {
     if (action === "create-item") await createItem(categoryId);
     if (action === "edit-item") await editItem(itemId);
     if (action === "delete-item") await deleteItem(itemId);
+    if (action === "refresh-data") await withLoading("正在刷新数据...", refresh);
     if (action === "import-bookmarks") bookmarkFile.click();
     if (action === "select-category-items") selectCategoryItems(categoryId);
     if (action === "batch-delete") await batchDeleteItems();
